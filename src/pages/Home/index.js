@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Page } from "../../components/Page";
 import { Search } from "../../components/Search";
+import { httpRequest, HTTP_VERBS } from "../../utils/HttpRequest";
 import { CardShop } from "./components/CardShop";
 
-const SHOPS = [
+/*const SHOPS = [
     {
         id: 1,
         name: "D1",
@@ -39,32 +40,49 @@ const SHOPS = [
         location: "Tienda del peluquero en Medellin",
         category: "Belleza"
     }
-];
+];*/
 
 export const Home = () => {
 
     const [searchShops, setSearchShoops] = useState("");
-
+    const [shops, setShops] = useState([]);
+    
     const onSearchShops = (data) => {
         setSearchShoops(data);
     }
 
-    return (
-
-        <Page>
-
-            <Search listener={onSearchShops}/>
-            {searchShops !== ""
-                && (<p>Filtro: <strong>{searchShops}</strong></p> )}
-            
-            {
-                SHOPS.map((item, key) => <CardShop key={key} {...item} />)
+    useEffect(() => {
+        requestShops();
+      }, [searchShops]); // listener sobre searchShops
+    
+      const requestShops = async () => {
+        try {
+          const response = await httpRequest({
+            method: HTTP_VERBS.GET,
+            endpoint: "/shops",
+            params: {
+              filter: searchShops
             }
-
+          });
+          const {data} = response;
+          setShops(data);
+        } catch (error) {
+          setShops([]);
+        }
+      }
+    
+      return (
+        <Page>
+          <Search listener={onSearchShops} />
+          { searchShops !== "" 
+            && (<p>Filtro: <strong>{searchShops}</strong></p>)
+          }
+          {
+            shops.map((item, key) => <CardShop key={key} {...item} />  )
+          }
         </Page>
-
-    )
-};
+      );
+    }
 
 
 
